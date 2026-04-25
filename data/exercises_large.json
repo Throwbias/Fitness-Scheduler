@@ -421,20 +421,6 @@
   },
   {
     "id": "ex031",
-    "name": "Lat Pulldown",
-    "category": "pull",
-    "muscle_group": "upper",
-    "difficulty": "easy",
-    "duration_min": 8,
-    "fatigue_cost": 4,
-    "priority": 7,
-    "min_recovery_days": 1,
-    "equipment": ["machine"],
-    "goal_tags": ["hypertrophy", "general_fitness"],
-    "contraindications": []
-  },
-  {
-    "id": "ex032",
     "name": "Seated Cable Row",
     "category": "pull",
     "muscle_group": "upper",
@@ -448,7 +434,7 @@
     "contraindications": []
   },
   {
-    "id": "ex033",
+    "id": "ex032",
     "name": "Face Pull",
     "category": "pull",
     "muscle_group": "upper",
@@ -462,35 +448,7 @@
     "contraindications": []
   },
   {
-    "id": "ex034",
-    "name": "Incline Dumbbell Press",
-    "category": "push",
-    "muscle_group": "upper",
-    "difficulty": "moderate",
-    "duration_min": 8,
-    "fatigue_cost": 5,
-    "priority": 7,
-    "min_recovery_days": 1,
-    "equipment": ["dumbbell", "bench"],
-    "goal_tags": ["hypertrophy", "general_fitness"],
-    "contraindications": []
-  },
-  {
-    "id": "ex035",
-    "name": "Machine Chest Press",
-    "category": "push",
-    "muscle_group": "upper",
-    "difficulty": "easy",
-    "duration_min": 7,
-    "fatigue_cost": 4,
-    "priority": 6,
-    "min_recovery_days": 1,
-    "equipment": ["machine"],
-    "goal_tags": ["hypertrophy", "general_fitness"],
-    "contraindications": []
-  },
-  {
-    "id": "ex036",
+    "id": "ex033",
     "name": "Lateral Raise",
     "category": "push",
     "muscle_group": "upper",
@@ -504,7 +462,7 @@
     "contraindications": []
   },
   {
-    "id": "ex037",
+    "id": "ex034",
     "name": "Hack Squat",
     "category": "squat",
     "muscle_group": "lower",
@@ -518,7 +476,7 @@
     "contraindications": []
   },
   {
-    "id": "ex038",
+    "id": "ex035",
     "name": "Leg Press",
     "category": "squat",
     "muscle_group": "lower",
@@ -532,7 +490,7 @@
     "contraindications": []
   },
   {
-    "id": "ex039",
+    "id": "ex036",
     "name": "Step-Up",
     "category": "squat",
     "muscle_group": "lower",
@@ -546,7 +504,7 @@
     "contraindications": []
   },
   {
-    "id": "ex040",
+    "id": "ex037",
     "name": "Hamstring Curl",
     "category": "hinge",
     "muscle_group": "lower",
@@ -560,7 +518,7 @@
     "contraindications": []
   },
   {
-    "id": "ex041",
+    "id": "ex038",
     "name": "Back Extension",
     "category": "hinge",
     "muscle_group": "lower",
@@ -574,7 +532,7 @@
     "contraindications": []
   },
   {
-    "id": "ex042",
+    "id": "ex039",
     "name": "Cable Pull-Through",
     "category": "hinge",
     "muscle_group": "lower",
@@ -588,7 +546,7 @@
     "contraindications": []
   },
   {
-    "id": "ex043",
+    "id": "ex040",
     "name": "Walking Lunge",
     "category": "squat",
     "muscle_group": "lower",
@@ -602,7 +560,7 @@
     "contraindications": []
   },
   {
-    "id": "ex044",
+    "id": "ex041",
     "name": "Calf Raise",
     "category": "squat",
     "muscle_group": "lower",
@@ -616,49 +574,7 @@
     "contraindications": []
   },
   {
-    "id": "ex045",
-    "name": "Pallof Press",
-    "category": "core",
-    "muscle_group": "core",
-    "difficulty": "easy",
-    "duration_min": 5,
-    "fatigue_cost": 2,
-    "priority": 5,
-    "min_recovery_days": 0,
-    "equipment": ["cable"],
-    "goal_tags": ["general_fitness", "rehab"],
-    "contraindications": []
-  },
-  {
-    "id": "ex046",
-    "name": "Side Plank",
-    "category": "core",
-    "muscle_group": "core",
-    "difficulty": "easy",
-    "duration_min": 5,
-    "fatigue_cost": 2,
-    "priority": 5,
-    "min_recovery_days": 0,
-    "equipment": [],
-    "goal_tags": ["general_fitness", "rehab"],
-    "contraindications": []
-  },
-  {
-    "id": "ex047",
-    "name": "Ab Wheel Rollout",
-    "category": "core",
-    "muscle_group": "core",
-    "difficulty": "moderate",
-    "duration_min": 6,
-    "fatigue_cost": 3,
-    "priority": 6,
-    "min_recovery_days": 0,
-    "equipment": ["ab_wheel"],
-    "goal_tags": ["strength", "general_fitness"],
-    "contraindications": []
-  },
-  {
-    "id": "ex048",
+    "id": "ex042",
     "name": "Farmer Carry",
     "category": "core",
     "muscle_group": "core",
@@ -669,34 +585,6 @@
     "min_recovery_days": 0,
     "equipment": ["dumbbell"],
     "goal_tags": ["general_fitness", "strength"],
-    "contraindications": []
-  },
-  {
-    "id": "ex049",
-    "name": "Push-Up",
-    "category": "push",
-    "muscle_group": "upper",
-    "difficulty": "easy",
-    "duration_min": 6,
-    "fatigue_cost": 3,
-    "priority": 5,
-    "min_recovery_days": 0,
-    "equipment": [],
-    "goal_tags": ["general_fitness", "rehab"],
-    "contraindications": []
-  },
-  {
-    "id": "ex050",
-    "name": "Chest-Supported Row",
-    "category": "pull",
-    "muscle_group": "upper",
-    "difficulty": "easy",
-    "duration_min": 7,
-    "fatigue_cost": 3,
-    "priority": 6,
-    "min_recovery_days": 0,
-    "equipment": ["bench", "dumbbell"],
-    "goal_tags": ["hypertrophy", "general_fitness"],
     "contraindications": []
   }
 ]

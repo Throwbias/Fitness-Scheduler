@@ -22,9 +22,9 @@
   "max_training_days_per_week": 5,
   "desired_training_days_per_week": 5,
   "min_start_score": 11.0,
-  "min_continue_score": 5.5,
+  "min_continue_score": 3.0,
   "max_heavy_exercises_per_session": 2,
-  "min_exercises_per_session": 2,
+  "min_exercises_per_session": 4,
   "min_session_time_for_training_day": 15,
   "session_fullness_preference": "substantial"
 }

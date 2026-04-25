@@ -21,7 +21,7 @@ def target_session_time(request: PlanningRequest) -> float:
     preference_map = {
         "light": 0.50,
         "moderate": 0.65,
-        "substantial": 0.80,
+        "substantial": 0.90,
     }
     fraction = preference_map.get(request.session_fullness_preference, 0.65)
     return request.session_time_limit * fraction
@@ -54,11 +54,11 @@ def candidate_score(
     if len(session.exercise_ids) == 0:
         session_saturation_penalty = 0
     elif len(session.exercise_ids) == 1:
-        session_saturation_penalty = 1.5
+        session_saturation_penalty = 0.75
     elif len(session.exercise_ids) == 2:
-        session_saturation_penalty = 3.5
+        session_saturation_penalty = 1.75
     else:
-        session_saturation_penalty = 6
+        session_saturation_penalty = 3
 
     repeated_category_penalty = 2 if exercise.category in session.categories_hit else 0
 

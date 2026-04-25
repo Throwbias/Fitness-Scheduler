@@ -1,135 +1,140 @@
-# Constraint-Based Workout Scheduling System
+# Constraint-Based Fitness Scheduler
 
 ## Overview
-
-This project implements a constraint-based scheduling system for generating weekly workout plans using a greedy heuristic algorithm. The system models training program design as a constrained optimization problem, balancing multiple factors such as time, fatigue, recovery, and movement coverage.
-
-The goal is to construct feasible and high-quality training schedules while demonstrating how algorithmic techniques can be applied to a real-world domain.
+This project models weekly workout planning as a constrained optimization problem. It automatically generates feasible, scientifically grounded weekly workout plans by balancing hard physiological constraints (time limits, fatigue caps, equipment availability) with soft constraints (movement category coverage, priority exercises).
 
 ---
 
-## Key Features
+## System Architecture
 
-* Constraint-based exercise filtering (time, fatigue, recovery, equipment)
-* Greedy heuristic scheduler for plan construction
-* Multi-objective scoring system (priority, coverage, utilization, fatigue balance)
-* Random baseline for performance comparison
-* Experimental evaluation using a Jupyter notebook
+The scheduling engine operates in two distinct algorithmic phases to ensure both speed and optimality:
+
+### 1. Constructive Phase (Greedy Heuristic)
+Rapidly builds a valid baseline schedule by iteratively evaluating and selecting the highest-scoring feasible exercises.
+
+- Respects all hard constraints
+- Produces a working initial solution
+- Enables fast schedule construction
+
+**Time Complexity:** `O(D * N * K)`
+
+---
+
+### 2. Refinement Phase (Local Search)
+Optimizes the greedy baseline by exploring a neighborhood of adjacent schedules.
+
+Supported mutation types:
+- Insertions (build new sessions)
+- Relocations (move exercises across days)
+- Replacements (swap with unused exercises)
+- Swaps (exchange between active days)
+
+This phase helps:
+- escape local minima
+- improve fatigue balance (via variance minimization)
+- better match weekly structure goals
 
 ---
 
 ## Project Structure
 
-```
+```text
 FinalProject/
-├── src/           # Core implementation (scheduler, models, scoring, etc.)
-├── data/          # Input datasets (exercises and requests)
-├── docs/          # Proposal and references
-├── analysis/      # Experimental notebook
-├── tests/         # Unit tests
-├── results/       # Placeholder for future outputs
-└── README.md
+├── src/
+│   ├── algorithms/          # Core schedulers (Greedy, Random, Local Search)
+│   ├── data_structures/     # Data classes and models
+│   ├── utils/               # Scoring, evaluation, and data loading
+│   └── main.py              # Main execution pipeline and CLI
+├── data/                    # JSON datasets and user request parameters
+├── tests/                   # Pytest suite (correctness + performance)
+├── analysis/                # Chart generation and visualization scripts
+├── results/                 # Output CSVs and summaries
+└── docs/                    # Academic proposals and reports
 ```
 
 ---
 
-## How It Works
+## Prerequisites
 
-The system constructs a weekly training plan using a three-stage pipeline:
-
-1. **Feasibility Filtering**
-   Exercises are filtered based on constraints such as session time limits, fatigue caps, equipment availability, and recovery requirements.
-
-2. **Scoring**
-   Feasible exercises are evaluated using a heuristic scoring function that considers:
-
-   * exercise priority
-   * movement category coverage
-   * goal alignment
-   * time efficiency
-   * fatigue cost
-
-3. **Greedy Scheduling**
-   The scheduler iteratively selects the highest-scoring feasible exercise until the session is filled.
+- Python **3.10+** (required for modern typing features such as `dict[str, Exercise]`)
 
 ---
 
-## Experimental Evaluation
-
-The project includes an experimental comparison between:
-
-* **Greedy Scheduler** (heuristic-driven)
-* **Random Baseline** (feasible but unguided)
-
-Metrics used:
-
-* Coverage Score
-* Priority Score
-* Time Utilization
-* Fatigue Balance
-* Constraint Violations
-
-Experiments are implemented in:
-
-```
-analysis/experiments.ipynb
-```
-
----
-
-## Getting Started
-
-### 1. Set up environment
+## Installation
 
 ```bash
+# Clone the repository
+git clone <your-repo-url>
+cd FinalProject
+
+# Set up a virtual environment
 python -m venv venv
-source venv/Scripts/activate  # Windows (Git Bash)
+
+# Activate the environment
+
+# macOS / Linux
+source venv/bin/activate  
+
+# Windows
+venv\Scripts\activate
+
+# Install required tools
+pip install pytest black isort
 ```
 
-### 2. Install dependencies
+---
 
-```bash
-pip install matplotlib
-```
+## Usage
 
-### 3. Run the scheduler
+The scheduling pipeline is executed via CLI. Execution steps, constraint evaluations, and final metrics are printed to the console.
 
+### Run with default parameters
 ```bash
 python -m src.main
 ```
 
-### 4. Run experiments
-
-Open:
-
+### Run with custom configurations
+```bash
+python -m src.main \
+  --dataset data/exercises_large.json \
+  --request data/sample_request.json \
+  --iterations 500
 ```
-analysis/experiments.ipynb
+
+---
+
+## Running Tests
+
+```bash
+python -m pytest -v
 ```
 
-and execute all cells.
+Covers:
+- correctness
+- edge cases
+- performance behavior
 
 ---
 
-## Current Status
+## Code Formatting
 
-Chapter 13 deliverables completed:
+This project follows **PEP 8** standards.
 
-* Project proposal (docs/proposal.pdf)
-* Working prototype (src/)
-* Experimental plan and baseline comparison (analysis/)
-* Literature review and references (docs/references.bib)
+Format code before committing:
 
----
-
-## Future Work
-
-* Improve scoring function sensitivity
-* Add structural evaluation metrics
-* Explore alternative optimization methods (e.g., local search, DP approximations)
-* Expand dataset and constraints
+```bash
+isort .
+black .
+```
 
 ---
 
-## Author
+## Summary
 
-Aaron Tobias
+This system demonstrates a hybrid optimization pipeline that combines:
+
+- constraint-based filtering
+- heuristic search (greedy)
+- local optimization (neighborhood search)
+
+to model realistic weekly training plans under competing physiological and structural constraints.

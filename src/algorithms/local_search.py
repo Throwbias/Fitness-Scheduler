@@ -153,6 +153,37 @@ def try_build_session_on_empty_day(
 
 
 def refine_plan_with_replacements(plan, exercises, request, exercise_lookup, max_iterations=100):
+    """
+    Optimizes an existing weekly workout plan using a local search algorithm.
+
+    This algorithm iteratively explores a neighborhood of adjacent schedules to find 
+    a global optimum. It attempts four types of mutations per iteration:
+        1. Replacement: Swapping an assigned exercise with an unused one.
+        2. Insertion: Building a new valid session on a previously empty day.
+        3. Relocation: Moving an exercise to an empty day and building a new session around it.
+        4. Swapping: Trading exercises between two already active days to balance fatigue.
+    
+    Any mutation that improves the overall `total_score` while strictly adhering 
+    to all hard constraints (time limits, fatigue caps, recovery) is kept. 
+    The search terminates when an iteration completes with no improvements found, 
+    or when max_iterations is reached.
+
+    Time Complexity:
+        Approximately O(I * D^2 * K^2 * N) in the worst case, where I is the number 
+        of iterations, D is active days, K is exercises per session, and N is the 
+        number of available unused exercises.
+
+    Args:
+        plan (WeeklyPlan): The initial feasible plan (usually generated via a greedy heuristic).
+        exercises (list[Exercise]): The complete list of available Exercise objects.
+        request (PlanningRequest): The user's configuration and hard constraints.
+        exercise_lookup (dict[str, Exercise]): O(1) lookup dictionary mapping exercise IDs to objects.
+        max_iterations (int, optional): The maximum number of improvement loops to execute. Defaults to 100.
+
+    Returns:
+        tuple[WeeklyPlan, dict]: A tuple containing the fully optimized WeeklyPlan 
+        and a dictionary of its final evaluated metrics.
+    """
     best_plan = deepcopy(plan)
     best_metrics = evaluate_weekly_plan(best_plan, request, exercise_lookup)
 
@@ -329,6 +360,72 @@ def refine_plan_with_replacements(plan, exercises, request, exercise_lookup, max
                 if improved:
                     break
 
+        if improved:
+            continue
+
+        # --------------------------------------------------
+        # MOVE TYPE 4: Swap exercises between two active days
+        # --------------------------------------------------
+        active_days_list = [
+            day for day in request.days_available
+            if len(best_plan.sessions[day].exercise_ids) > 0
+        ]
+
+        for i in range(len(active_days_list)):
+            for j in range(i + 1, len(active_days_list)):
+                day1 = active_days_list[i]
+                day2 = active_days_list[j]
+
+                session1 = best_plan.sessions[day1]
+                session2 = best_plan.sessions[day2]
+
+                for idx1, ex_id_1 in enumerate(session1.exercise_ids):
+                    for idx2, ex_id_2 in enumerate(session2.exercise_ids):
+
+                        trial_plan = deepcopy(best_plan)
+                        trial_lookup = dict(exercise_lookup)
+
+                        trial_session1 = trial_plan.sessions[day1]
+                        trial_session2 = trial_plan.sessions[day2]
+
+                        # Perform the swap
+                        trial_session1.exercise_ids[idx1] = ex_id_2
+                        trial_session2.exercise_ids[idx2] = ex_id_1
+
+                        recompute_session(trial_session1, trial_lookup)
+                        recompute_session(trial_session2, trial_lookup)
+
+                        # Validity checks for both sessions
+                        valid = True
+                        for sess in (trial_session1, trial_session2):
+                            if sess.total_time > request.session_time_limit:
+                                valid = False
+                                break
+                            if sess.total_fatigue > request.daily_fatigue_cap:
+                                valid = False
+                                break
+                            if count_heavy_exercises(sess, trial_lookup) > request.max_heavy_exercises_per_session:
+                                valid = False
+                                break
+                        
+                        if not valid:
+                            continue
+                            
+                        # Ensure both sessions are still meaningful after the swap
+                        if not session_is_meaningful(trial_session1, request) or not session_is_meaningful(trial_session2, request):
+                            continue
+
+                        trial_metrics = evaluate_weekly_plan(trial_plan, request, trial_lookup)
+
+                        if trial_metrics["total_score"] > best_metrics["total_score"]:
+                            best_plan = trial_plan
+                            best_metrics = trial_metrics
+                            improved = True
+                            break
+                    
+                    if improved: break
+                if improved: break
+                
         if not improved:
             break
 

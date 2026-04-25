@@ -1,0 +1,4 @@
+algorithm,coverage_score,priority_score,time_utilization_score,fatigue_balance_score,training_frequency_score,constraint_violations,total_score
+greedy,0.8,0.7,0.5166666666666667,0.8,0.4,0,59.75
+random,1.0,0.605,0.45,0.14619883040935672,1.0,0,61.04298245614035
+refined,1.0,0.7,0.55,1.0,0.4,0,68.25

@@ -1,66 +1,29 @@
 import csv
-import time
+import os
 
-from src.algorithms.greedy_scheduler import build_greedy_plan
-from src.algorithms.random_scheduler import build_random_plan
-from src.algorithms.local_search import refine_plan_with_replacements
-from src.utils.evaluator import evaluate_weekly_plan
+def save_results(metrics_list: list[dict], output_dir: str = "results", filename: str = "summary.csv"):
+    """
+    Saves the experimental metrics to a CSV file for analysis.
 
-
-def run_experiments(exercises, request, trials=30, output_path="results/raw/experiment_results.csv"):
-    lookup = {ex.id: ex for ex in exercises}
-
-    rows = []
-
-    # Greedy baseline
-    start = time.time()
-    greedy_plan = build_greedy_plan(exercises, request)
-    greedy_metrics = evaluate_weekly_plan(greedy_plan, request, lookup)
-    greedy_time = time.time() - start
-
-    rows.append({
-        "algorithm": "greedy",
-        "trial": 0,
-        "runtime": greedy_time,
-        **greedy_metrics
-    })
-
-    # Local search refinement
-    start = time.time()
-    refined_plan, refined_metrics = refine_plan_with_replacements(
-        greedy_plan, exercises, request, dict(lookup)
-    )
-    refined_time = time.time() - start
-
-    rows.append({
-        "algorithm": "refined",
-        "trial": 0,
-        "runtime": refined_time,
-        **refined_metrics
-    })
-
-    # Random baseline trials
-    for seed in range(trials):
-        start = time.time()
-
-        plan = build_random_plan(exercises, request, seed=seed)
-        metrics = evaluate_weekly_plan(plan, request, lookup)
-
-        runtime = time.time() - start
-
-        rows.append({
-            "algorithm": "random",
-            "trial": seed,
-            "runtime": runtime,
-            **metrics
-        })
-
-    # Write CSV
-    keys = rows[0].keys()
-
-    with open(output_path, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=keys)
+    Args:
+        metrics_list (list[dict]): A list of dictionaries containing the scoring metrics.
+        output_dir (str): The folder to save the results in.
+        filename (str): The name of the output CSV file.
+    """
+    # Ensure the results directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
+    filepath = os.path.join(output_dir, filename)
+    
+    # If the list is empty, do nothing
+    if not metrics_list:
+        return
+        
+    # Extract the column headers dynamically from the first dictionary's keys
+    headers = metrics_list[0].keys()
+    
+    # Write the data to a CSV
+    with open(filepath, 'w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=headers)
         writer.writeheader()
-        writer.writerows(rows)
-
-    print(f"Saved results to {output_path}")
+        writer.writerows(metrics_list)
