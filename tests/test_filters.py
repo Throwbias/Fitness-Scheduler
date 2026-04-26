@@ -1,5 +1,6 @@
 from src.data_structures.models import Exercise, PlanningRequest, SessionPlan
-from src.utils.filters import fits_time, fits_fatigue, has_recovery_conflict
+from src.utils.filters import fits_fatigue, fits_time, has_recovery_conflict
+
 
 def test_fits_time_true():
     ex = Exercise("1", "Test", "push", "upper", "easy", 10, 3, 5, 1)

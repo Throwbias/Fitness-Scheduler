@@ -1,7 +1,7 @@
-from src.utils.loader import load_exercises, load_request
 from src.algorithms.greedy_scheduler import build_greedy_plan
 from src.algorithms.local_search import refine_plan_with_replacements
 from src.utils.evaluator import evaluate_weekly_plan
+from src.utils.loader import load_exercises, load_request
 
 
 def test_local_search_does_not_decrease_score():

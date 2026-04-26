@@ -1,6 +1,7 @@
 from src.data_structures.models import Exercise, PlanningRequest, SessionPlan
 from src.utils.scoring import candidate_score
 
+
 def test_candidate_score_prefers_missing_category():
     ex1 = Exercise("1", "Squat", "squat", "lower", "hard", 10, 5, 8, 1)
     ex2 = Exercise("2", "Bench", "push", "upper", "moderate", 10, 5, 8, 1)

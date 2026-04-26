@@ -1,6 +1,7 @@
-from src.utils.loader import load_exercises, load_request
 from src.algorithms.greedy_scheduler import build_greedy_plan
 from src.algorithms.random_scheduler import build_random_plan
+from src.utils.loader import load_exercises, load_request
+
 
 def test_greedy_scheduler_runs():
     exercises = load_exercises("data/exercises.json")

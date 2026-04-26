@@ -1,9 +1,11 @@
 import statistics
 
-from src.data_structures.models import WeeklyPlan, PlanningRequest, Exercise
+from src.data_structures.models import Exercise, PlanningRequest, WeeklyPlan
 
 
-def compute_coverage_score(plan: WeeklyPlan, request: PlanningRequest, exercise_lookup: dict[str, Exercise]) -> float:
+def compute_coverage_score(
+    plan: WeeklyPlan, request: PlanningRequest, exercise_lookup: dict[str, Exercise]
+) -> float:
     categories_hit = set()
 
     for session in plan.sessions.values():
@@ -17,7 +19,9 @@ def compute_coverage_score(plan: WeeklyPlan, request: PlanningRequest, exercise_
     return len(categories_hit & required) / len(required)
 
 
-def compute_priority_score(plan: WeeklyPlan, exercise_lookup: dict[str, Exercise]) -> float:
+def compute_priority_score(
+    plan: WeeklyPlan, exercise_lookup: dict[str, Exercise]
+) -> float:
     all_selected = [
         exercise_lookup[ex_id]
         for session in plan.sessions.values()
@@ -35,8 +39,7 @@ def compute_priority_score(plan: WeeklyPlan, exercise_lookup: dict[str, Exercise
 
 def compute_time_utilization_score(plan: WeeklyPlan, request: PlanningRequest) -> float:
     active_sessions = [
-        session for session in plan.sessions.values()
-        if len(session.exercise_ids) > 0
+        session for session in plan.sessions.values() if len(session.exercise_ids) > 0
     ]
 
     if not active_sessions:
@@ -62,10 +65,11 @@ def compute_fatigue_balance_score(plan: WeeklyPlan) -> float:
     return 1 / (1 + variance)
 
 
-def compute_training_frequency_score(plan: WeeklyPlan, request: PlanningRequest) -> float:
+def compute_training_frequency_score(
+    plan: WeeklyPlan, request: PlanningRequest
+) -> float:
     active_days = sum(
-        1 for session in plan.sessions.values()
-        if len(session.exercise_ids) > 0
+        1 for session in plan.sessions.values() if len(session.exercise_ids) > 0
     )
 
     target = request.desired_training_days_per_week

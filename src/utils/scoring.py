@@ -1,6 +1,5 @@
 from src.data_structures.models import Exercise, PlanningRequest, SessionPlan
 
-
 LOWER_CATEGORIES = {"squat", "hinge"}
 UPPER_CATEGORIES = {"push", "pull"}
 SUPPORT_CATEGORIES = {"core"}
@@ -49,7 +48,8 @@ def candidate_score(
     preferred_bonus = 3 if exercise.name in request.preferred_exercises else 0
 
     projected_fatigue = session.total_fatigue + exercise.fatigue_cost
-    fatigue_penalty = 4.5 * (projected_fatigue / request.daily_fatigue_cap)
+    # Reduced multiplier from 4.5 to 2.5 to allow sessions to fill more easily
+    fatigue_penalty = 2.5 * (projected_fatigue / request.daily_fatigue_cap)
 
     if len(session.exercise_ids) == 0:
         session_saturation_penalty = 0
@@ -67,7 +67,9 @@ def candidate_score(
         new_day_bonus = 6
 
         if training_days_used < request.desired_training_days_per_week:
-            frequency_bonus = 2 + (request.desired_training_days_per_week - training_days_used)
+            frequency_bonus = 2 + (
+                request.desired_training_days_per_week - training_days_used
+            )
         else:
             frequency_bonus = 0
     else:
@@ -84,7 +86,9 @@ def candidate_score(
         first_category = session.categories_hit[0]
         focus_bonus = 3 if same_focus(first_category, exercise.category) else 0
 
-        if first_category in PRIMARY_CATEGORIES and same_focus(first_category, exercise.category):
+        if first_category in PRIMARY_CATEGORIES and same_focus(
+            first_category, exercise.category
+        ):
             primary_bonus = 2
         else:
             primary_bonus = 0
@@ -95,10 +99,7 @@ def candidate_score(
     if projected_time <= target_time:
         fill_bonus = 10 * (projected_time / target_time)
     else:
-        fill_bonus = max(
-            0,
-            10 - ((projected_time - target_time) / 8)
-        )
+        fill_bonus = max(0, 10 - ((projected_time - target_time) / 8))
 
     return (
         priority_term

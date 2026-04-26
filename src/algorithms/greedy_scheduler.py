@@ -37,13 +37,13 @@ def build_greedy_plan(exercises, request):
     """
     Constructs a feasible weekly workout plan using a greedy heuristic.
 
-    This algorithm iterates through available training days iteratively, 
-    evaluating and assigning the highest-scoring valid exercise based on 
-    the candidate_score heuristic. It natively respects hard constraints 
+    This algorithm iterates through available training days iteratively,
+    evaluating and assigning the highest-scoring valid exercise based on
+    the candidate_score heuristic. It natively respects hard constraints
     including daily fatigue caps, session time limits, and recovery windows.
 
     Time Complexity:
-        O(D * N * K) where D is the number of available days, N is the 
+        O(D * N * K) where D is the number of available days, N is the
         number of exercises, and K is the maximum exercises per session.
 
     Args:
@@ -53,10 +53,7 @@ def build_greedy_plan(exercises, request):
     Returns:
         WeeklyPlan: A populated weekly schedule that satisfies all hard constraints.
     """
-    sessions = {
-        day: SessionPlan(day=day)
-        for day in request.days_available
-    }
+    sessions = {day: SessionPlan(day=day) for day in request.days_available}
 
     plan = WeeklyPlan(sessions=sessions)
 
@@ -68,25 +65,31 @@ def build_greedy_plan(exercises, request):
     days = spread_days(request.days_available)
 
     # Use a flag to keep the loop running as long as we are finding valid placements
-    making_progress = True 
-    
+    making_progress = True
+
     while making_progress:
-        making_progress = False # Reset at the start of each week cycle
-        
+        making_progress = False  # Reset at the start of each week cycle
+
         # Iterate through the days, adding exactly ONE exercise per day
         for day_index, day in enumerate(days):
-            
+
             # Check training day limit dynamically based on populated sessions
-            active_days = sum(1 for s in plan.sessions.values() if len(s.exercise_ids) > 0)
-            
+            active_days = sum(
+                1 for s in plan.sessions.values() if len(s.exercise_ids) > 0
+            )
+
             session = plan.sessions[day]
-            
+
             # If the session is empty and we've hit our day limit, skip it
-            if len(session.exercise_ids) == 0 and active_days >= request.max_training_days_per_week:
+            if (
+                len(session.exercise_ids) == 0
+                and active_days >= request.max_training_days_per_week
+            ):
                 continue
 
             feasible = [
-                ex for ex in exercises
+                ex
+                for ex in exercises
                 if is_feasible(
                     exercise=ex,
                     session=session,
@@ -122,11 +125,15 @@ def build_greedy_plan(exercises, request):
             )
 
             current_heavy = sum(
-                1 for ex_id in session.exercise_ids
+                1
+                for ex_id in session.exercise_ids
                 if exercise_lookup[ex_id].fatigue_cost >= 6
             )
-            
-            if best.fatigue_cost >= 6 and current_heavy >= request.max_heavy_exercises_per_session:
+
+            if (
+                best.fatigue_cost >= 6
+                and current_heavy >= request.max_heavy_exercises_per_session
+            ):
                 continue
 
             if len(session.exercise_ids) == 0:
@@ -145,9 +152,11 @@ def build_greedy_plan(exercises, request):
                 session.categories_hit.append(best.category)
 
             assigned_ids.add(best.id)
-            category_counts_this_week[best.category] = category_counts_this_week.get(best.category, 0) + 1
+            category_counts_this_week[best.category] = (
+                category_counts_this_week.get(best.category, 0) + 1
+            )
             last_day_by_category[best.category] = day_index
-            
+
             # Since we successfully added an exercise, we know we made progress
             making_progress = True
 
@@ -155,7 +164,9 @@ def build_greedy_plan(exercises, request):
     # This must happen at the end because a session might need multiple passes to become meaningful
     for day in days:
         session = plan.sessions[day]
-        if len(session.exercise_ids) > 0 and not session_is_meaningful(session, request):
+        if len(session.exercise_ids) > 0 and not session_is_meaningful(
+            session, request
+        ):
             for ex_id in session.exercise_ids:
                 assigned_ids.discard(ex_id)
                 ex = exercise_lookup[ex_id]

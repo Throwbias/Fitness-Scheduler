@@ -6,8 +6,12 @@ from src.utils.scoring import candidate_score
 
 
 def recompute_session(session, lookup):
-    session.total_time = sum(lookup[ex_id].duration_min for ex_id in session.exercise_ids)
-    session.total_fatigue = sum(lookup[ex_id].fatigue_cost for ex_id in session.exercise_ids)
+    session.total_time = sum(
+        lookup[ex_id].duration_min for ex_id in session.exercise_ids
+    )
+    session.total_fatigue = sum(
+        lookup[ex_id].fatigue_cost for ex_id in session.exercise_ids
+    )
     session.categories_hit = []
     for ex_id in session.exercise_ids:
         cat = lookup[ex_id].category
@@ -41,7 +45,9 @@ def build_weekly_state(plan, request, exercise_lookup):
         for ex_id in session.exercise_ids:
             ex = exercise_lookup[ex_id]
             assigned_ids.add(ex_id)
-            category_counts_this_week[ex.category] = category_counts_this_week.get(ex.category, 0) + 1
+            category_counts_this_week[ex.category] = (
+                category_counts_this_week.get(ex.category, 0) + 1
+            )
             last_day_by_category[ex.category] = day_to_index[day]
 
     return assigned_ids, category_counts_this_week, last_day_by_category, day_to_index
@@ -49,8 +55,7 @@ def build_weekly_state(plan, request, exercise_lookup):
 
 def count_heavy_exercises(session, exercise_lookup):
     return sum(
-        1 for ex_id in session.exercise_ids
-        if exercise_lookup[ex_id].fatigue_cost >= 6
+        1 for ex_id in session.exercise_ids if exercise_lookup[ex_id].fatigue_cost >= 6
     )
 
 
@@ -65,13 +70,12 @@ def try_build_session_on_empty_day(
     Attempt to build a meaningful session on an empty day using currently unused exercises.
     Returns (success: bool, updated_plan)
     """
-    assigned_ids, category_counts_this_week, last_day_by_category, day_to_index = build_weekly_state(
-        trial_plan, request, exercise_lookup
+    assigned_ids, category_counts_this_week, last_day_by_category, day_to_index = (
+        build_weekly_state(trial_plan, request, exercise_lookup)
     )
 
     active_days = sum(
-        1 for s in trial_plan.sessions.values()
-        if len(s.exercise_ids) > 0
+        1 for s in trial_plan.sessions.values() if len(s.exercise_ids) > 0
     )
 
     session = trial_plan.sessions[day]
@@ -79,7 +83,8 @@ def try_build_session_on_empty_day(
 
     while True:
         feasible = [
-            ex for ex in exercises
+            ex
+            for ex in exercises
             if ex.id not in assigned_ids
             and is_feasible(
                 exercise=ex,
@@ -96,7 +101,8 @@ def try_build_session_on_empty_day(
 
         current_heavy = count_heavy_exercises(session, exercise_lookup)
         feasible = [
-            ex for ex in feasible
+            ex
+            for ex in feasible
             if not (
                 ex.fatigue_cost >= 6
                 and current_heavy >= request.max_heavy_exercises_per_session
@@ -142,7 +148,9 @@ def try_build_session_on_empty_day(
             session.categories_hit.append(best.category)
 
         assigned_ids.add(best.id)
-        category_counts_this_week[best.category] = category_counts_this_week.get(best.category, 0) + 1
+        category_counts_this_week[best.category] = (
+            category_counts_this_week.get(best.category, 0) + 1
+        )
         last_day_by_category[best.category] = day_index
 
     if session_is_meaningful(session, request):
@@ -152,25 +160,27 @@ def try_build_session_on_empty_day(
     return False, trial_plan
 
 
-def refine_plan_with_replacements(plan, exercises, request, exercise_lookup, max_iterations=100):
+def refine_plan_with_replacements(
+    plan, exercises, request, exercise_lookup, max_iterations=100
+):
     """
     Optimizes an existing weekly workout plan using a local search algorithm.
 
-    This algorithm iteratively explores a neighborhood of adjacent schedules to find 
+    This algorithm iteratively explores a neighborhood of adjacent schedules to find
     a global optimum. It attempts four types of mutations per iteration:
         1. Replacement: Swapping an assigned exercise with an unused one.
         2. Insertion: Building a new valid session on a previously empty day.
         3. Relocation: Moving an exercise to an empty day and building a new session around it.
         4. Swapping: Trading exercises between two already active days to balance fatigue.
-    
-    Any mutation that improves the overall `total_score` while strictly adhering 
-    to all hard constraints (time limits, fatigue caps, recovery) is kept. 
-    The search terminates when an iteration completes with no improvements found, 
+
+    Any mutation that improves the overall `total_score` while strictly adhering
+    to all hard constraints (time limits, fatigue caps, recovery) is kept.
+    The search terminates when an iteration completes with no improvements found,
     or when max_iterations is reached.
 
     Time Complexity:
-        Approximately O(I * D^2 * K^2 * N) in the worst case, where I is the number 
-        of iterations, D is active days, K is exercises per session, and N is the 
+        Approximately O(I * D^2 * K^2 * N) in the worst case, where I is the number
+        of iterations, D is active days, K is exercises per session, and N is the
         number of available unused exercises.
 
     Args:
@@ -181,7 +191,7 @@ def refine_plan_with_replacements(plan, exercises, request, exercise_lookup, max
         max_iterations (int, optional): The maximum number of improvement loops to execute. Defaults to 100.
 
     Returns:
-        tuple[WeeklyPlan, dict]: A tuple containing the fully optimized WeeklyPlan 
+        tuple[WeeklyPlan, dict]: A tuple containing the fully optimized WeeklyPlan
         and a dictionary of its final evaluated metrics.
     """
     best_plan = deepcopy(plan)
@@ -216,12 +226,17 @@ def refine_plan_with_replacements(plan, exercises, request, exercise_lookup, max
                         continue
                     if trial_session.total_fatigue > request.daily_fatigue_cap:
                         continue
-                    if count_heavy_exercises(trial_session, trial_lookup) > request.max_heavy_exercises_per_session:
+                    if (
+                        count_heavy_exercises(trial_session, trial_lookup)
+                        > request.max_heavy_exercises_per_session
+                    ):
                         continue
                     if not session_is_meaningful(trial_session, request):
                         continue
 
-                    trial_metrics = evaluate_weekly_plan(trial_plan, request, trial_lookup)
+                    trial_metrics = evaluate_weekly_plan(
+                        trial_plan, request, trial_lookup
+                    )
 
                     if trial_metrics["total_score"] > best_metrics["total_score"]:
                         best_plan = trial_plan
@@ -242,8 +257,7 @@ def refine_plan_with_replacements(plan, exercises, request, exercise_lookup, max
         # MOVE TYPE 2: insert a new session on an empty day
         # --------------------------------------------------
         active_days = sum(
-            1 for s in best_plan.sessions.values()
-            if len(s.exercise_ids) > 0
+            1 for s in best_plan.sessions.values() if len(s.exercise_ids) > 0
         )
 
         if active_days < request.max_training_days_per_week:
@@ -265,7 +279,9 @@ def refine_plan_with_replacements(plan, exercises, request, exercise_lookup, max
                 if not success:
                     continue
 
-                candidate_metrics = evaluate_weekly_plan(candidate_plan, request, exercise_lookup)
+                candidate_metrics = evaluate_weekly_plan(
+                    candidate_plan, request, exercise_lookup
+                )
 
                 if candidate_metrics["total_score"] > best_metrics["total_score"]:
                     best_plan = candidate_plan
@@ -281,18 +297,19 @@ def refine_plan_with_replacements(plan, exercises, request, exercise_lookup, max
         #               to an empty day, then try to build it up
         # --------------------------------------------------
         active_days = sum(
-            1 for s in best_plan.sessions.values()
-            if len(s.exercise_ids) > 0
+            1 for s in best_plan.sessions.values() if len(s.exercise_ids) > 0
         )
 
         if active_days < request.max_training_days_per_week:
             empty_days = [
-                day for day in request.days_available
+                day
+                for day in request.days_available
                 if len(best_plan.sessions[day].exercise_ids) == 0
             ]
 
             source_days = [
-                day for day in request.days_available
+                day
+                for day in request.days_available
                 if len(best_plan.sessions[day].exercise_ids) >= 3
             ]
 
@@ -315,7 +332,9 @@ def refine_plan_with_replacements(plan, exercises, request, exercise_lookup, max
                         recompute_session(trial_target, trial_lookup)
 
                         # Source must still remain meaningful
-                        if len(trial_source.exercise_ids) > 0 and not session_is_meaningful(trial_source, request):
+                        if len(
+                            trial_source.exercise_ids
+                        ) > 0 and not session_is_meaningful(trial_source, request):
                             continue
 
                         # Initial target day may be too small; try to build it up
@@ -339,16 +358,24 @@ def refine_plan_with_replacements(plan, exercises, request, exercise_lookup, max
                             if sess.total_fatigue > request.daily_fatigue_cap:
                                 valid = False
                                 break
-                            if count_heavy_exercises(sess, trial_lookup) > request.max_heavy_exercises_per_session:
+                            if (
+                                count_heavy_exercises(sess, trial_lookup)
+                                > request.max_heavy_exercises_per_session
+                            ):
                                 valid = False
                                 break
 
                         if not valid:
                             continue
 
-                        candidate_metrics = evaluate_weekly_plan(trial_plan, request, trial_lookup)
+                        candidate_metrics = evaluate_weekly_plan(
+                            trial_plan, request, trial_lookup
+                        )
 
-                        if candidate_metrics["total_score"] > best_metrics["total_score"]:
+                        if (
+                            candidate_metrics["total_score"]
+                            > best_metrics["total_score"]
+                        ):
                             best_plan = trial_plan
                             best_metrics = candidate_metrics
                             exercise_lookup = trial_lookup
@@ -367,7 +394,8 @@ def refine_plan_with_replacements(plan, exercises, request, exercise_lookup, max
         # MOVE TYPE 4: Swap exercises between two active days
         # --------------------------------------------------
         active_days_list = [
-            day for day in request.days_available
+            day
+            for day in request.days_available
             if len(best_plan.sessions[day].exercise_ids) > 0
         ]
 
@@ -404,28 +432,37 @@ def refine_plan_with_replacements(plan, exercises, request, exercise_lookup, max
                             if sess.total_fatigue > request.daily_fatigue_cap:
                                 valid = False
                                 break
-                            if count_heavy_exercises(sess, trial_lookup) > request.max_heavy_exercises_per_session:
+                            if (
+                                count_heavy_exercises(sess, trial_lookup)
+                                > request.max_heavy_exercises_per_session
+                            ):
                                 valid = False
                                 break
-                        
+
                         if not valid:
                             continue
-                            
+
                         # Ensure both sessions are still meaningful after the swap
-                        if not session_is_meaningful(trial_session1, request) or not session_is_meaningful(trial_session2, request):
+                        if not session_is_meaningful(
+                            trial_session1, request
+                        ) or not session_is_meaningful(trial_session2, request):
                             continue
 
-                        trial_metrics = evaluate_weekly_plan(trial_plan, request, trial_lookup)
+                        trial_metrics = evaluate_weekly_plan(
+                            trial_plan, request, trial_lookup
+                        )
 
                         if trial_metrics["total_score"] > best_metrics["total_score"]:
                             best_plan = trial_plan
                             best_metrics = trial_metrics
                             improved = True
                             break
-                    
-                    if improved: break
-                if improved: break
-                
+
+                    if improved:
+                        break
+                if improved:
+                    break
+
         if not improved:
             break
 

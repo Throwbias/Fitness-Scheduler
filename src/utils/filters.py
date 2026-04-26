@@ -9,11 +9,15 @@ def is_excluded(exercise: Exercise, request: PlanningRequest) -> bool:
     return exercise.name in request.excluded_exercises
 
 
-def fits_time(exercise: Exercise, session: SessionPlan, request: PlanningRequest) -> bool:
+def fits_time(
+    exercise: Exercise, session: SessionPlan, request: PlanningRequest
+) -> bool:
     return session.total_time + exercise.duration_min <= request.session_time_limit
 
 
-def fits_fatigue(exercise: Exercise, session: SessionPlan, request: PlanningRequest) -> bool:
+def fits_fatigue(
+    exercise: Exercise, session: SessionPlan, request: PlanningRequest
+) -> bool:
     return session.total_fatigue + exercise.fatigue_cost <= request.daily_fatigue_cap
 
 

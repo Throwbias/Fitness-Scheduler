@@ -3,7 +3,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
-
 RESULTS_PATH = Path("results/raw/experiment_results.csv")
 CHARTS_DIR = Path("analysis/charts")
 TABLES_DIR = Path("analysis/tables")

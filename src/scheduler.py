@@ -1,15 +1,12 @@
 import random
 
-from src.models import SessionPlan, WeeklyPlan
 from src.filters import is_feasible
+from src.models import SessionPlan, WeeklyPlan
 from src.scoring import candidate_score
 
 
 def build_greedy_plan(exercises, request):
-    sessions = {
-        day: SessionPlan(day=day)
-        for day in request.days_available
-    }
+    sessions = {day: SessionPlan(day=day) for day in request.days_available}
 
     plan = WeeklyPlan(sessions=sessions)
 
@@ -22,7 +19,8 @@ def build_greedy_plan(exercises, request):
 
         while True:
             feasible = [
-                ex for ex in exercises
+                ex
+                for ex in exercises
                 if is_feasible(
                     exercise=ex,
                     session=session,
@@ -63,10 +61,7 @@ def build_greedy_plan(exercises, request):
 def build_random_plan(exercises, request, seed=None):
     rng = random.Random(seed)
 
-    sessions = {
-        day: SessionPlan(day=day)
-        for day in request.days_available
-    }
+    sessions = {day: SessionPlan(day=day) for day in request.days_available}
 
     plan = WeeklyPlan(sessions=sessions)
 
@@ -79,7 +74,8 @@ def build_random_plan(exercises, request, seed=None):
 
         while True:
             feasible = [
-                ex for ex in exercises
+                ex
+                for ex in exercises
                 if is_feasible(
                     exercise=ex,
                     session=session,

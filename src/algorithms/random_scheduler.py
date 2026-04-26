@@ -38,10 +38,7 @@ def session_is_meaningful(session: SessionPlan, request) -> bool:
 def build_random_plan(exercises, request, seed=None):
     rng = random.Random(seed)
 
-    sessions = {
-        day: SessionPlan(day=day)
-        for day in request.days_available
-    }
+    sessions = {day: SessionPlan(day=day) for day in request.days_available}
 
     plan = WeeklyPlan(sessions=sessions)
 
@@ -61,7 +58,8 @@ def build_random_plan(exercises, request, seed=None):
 
         while True:
             feasible = [
-                ex for ex in exercises
+                ex
+                for ex in exercises
                 if is_feasible(
                     exercise=ex,
                     session=session,
@@ -76,12 +74,14 @@ def build_random_plan(exercises, request, seed=None):
                 break
 
             current_heavy = sum(
-                1 for ex_id in session.exercise_ids
+                1
+                for ex_id in session.exercise_ids
                 if exercise_lookup[ex_id].fatigue_cost >= 6
             )
 
             feasible = [
-                ex for ex in feasible
+                ex
+                for ex in feasible
                 if not (
                     ex.fatigue_cost >= 6
                     and current_heavy >= request.max_heavy_exercises_per_session
@@ -93,28 +93,32 @@ def build_random_plan(exercises, request, seed=None):
 
             if len(session.exercise_ids) == 0:
                 startable = [
-                    ex for ex in feasible
+                    ex
+                    for ex in feasible
                     if candidate_score(
                         ex,
                         session,
                         request,
                         category_counts_this_week,
                         training_days_used=training_days_used,
-                    ) >= request.min_start_score
+                    )
+                    >= request.min_start_score
                 ]
                 if not startable:
                     break
                 chosen = rng.choice(startable)
             else:
                 continuable = [
-                    ex for ex in feasible
+                    ex
+                    for ex in feasible
                     if candidate_score(
                         ex,
                         session,
                         request,
                         category_counts_this_week,
                         training_days_used=training_days_used,
-                    ) >= request.min_continue_score
+                    )
+                    >= request.min_continue_score
                 ]
                 if not continuable:
                     break
@@ -128,10 +132,14 @@ def build_random_plan(exercises, request, seed=None):
                 session.categories_hit.append(chosen.category)
 
             assigned_ids.add(chosen.id)
-            category_counts_this_week[chosen.category] = category_counts_this_week.get(chosen.category, 0) + 1
+            category_counts_this_week[chosen.category] = (
+                category_counts_this_week.get(chosen.category, 0) + 1
+            )
             last_day_by_category[chosen.category] = day_index
 
-        if len(session.exercise_ids) > 0 and not session_is_meaningful(session, request):
+        if len(session.exercise_ids) > 0 and not session_is_meaningful(
+            session, request
+        ):
             for ex_id in session.exercise_ids:
                 assigned_ids.discard(ex_id)
                 ex = exercise_lookup[ex_id]
