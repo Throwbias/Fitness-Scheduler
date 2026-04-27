@@ -1,89 +1,24 @@
 import statistics
-
 from src.data_structures.models import Exercise, PlanningRequest, WeeklyPlan
 
+# ... (Keep compute_coverage_score, compute_priority_score, etc. as they are) ...
 
-def compute_coverage_score(
+def count_constraint_violations(
     plan: WeeklyPlan, request: PlanningRequest, exercise_lookup: dict[str, Exercise]
-) -> float:
-    categories_hit = set()
-
-    for session in plan.sessions.values():
-        for ex_id in session.exercise_ids:
-            categories_hit.add(exercise_lookup[ex_id].category)
-
-    required = set(request.required_categories)
-    if not required:
-        return 1.0
-
-    return len(categories_hit & required) / len(required)
-
-
-def compute_priority_score(
-    plan: WeeklyPlan, exercise_lookup: dict[str, Exercise]
-) -> float:
-    all_selected = [
-        exercise_lookup[ex_id]
-        for session in plan.sessions.values()
-        for ex_id in session.exercise_ids
-    ]
-
-    if not all_selected:
-        return 0.0
-
-    total_priority = sum(ex.priority for ex in all_selected)
-    max_possible = len(all_selected) * 10  # assumes priority scale tops out at 10
-
-    return total_priority / max_possible if max_possible else 0.0
-
-
-def compute_time_utilization_score(plan: WeeklyPlan, request: PlanningRequest) -> float:
-    active_sessions = [
-        session for session in plan.sessions.values() if len(session.exercise_ids) > 0
-    ]
-
-    if not active_sessions:
-        return 0.0
-
-    total_used = sum(session.total_time for session in active_sessions)
-    total_available = len(active_sessions) * request.session_time_limit
-
-    return total_used / total_available if total_available else 0.0
-
-
-def compute_fatigue_balance_score(plan: WeeklyPlan) -> float:
-    active_fatigue = [
-        session.total_fatigue
-        for session in plan.sessions.values()
-        if len(session.exercise_ids) > 0
-    ]
-
-    if len(active_fatigue) <= 1:
-        return 1.0
-
-    variance = statistics.pvariance(active_fatigue)
-    return 1 / (1 + variance)
-
-
-def compute_training_frequency_score(
-    plan: WeeklyPlan, request: PlanningRequest
-) -> float:
-    active_days = sum(
-        1 for session in plan.sessions.values() if len(session.exercise_ids) > 0
-    )
-
-    target = request.desired_training_days_per_week
-
-    if target <= 0:
-        return 1.0
-
-    return max(0.0, 1 - abs(active_days - target) / target)
-
-
-def count_constraint_violations(plan: WeeklyPlan, request: PlanningRequest) -> int:
+) -> int:
     violations = 0
+    exercise_last_seen = {}  # Tracks the last day_index an exercise was performed
+    
+    # Sort days to ensure we check recovery chronologically
+    day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    sorted_days = sorted(plan.sessions.keys(), key=lambda d: day_order.index(d))
 
-    for session in plan.sessions.values():
+    for day_idx, day_name in enumerate(sorted_days):
+        session = plan.sessions[day_name]
+        if not session.exercise_ids:
+            continue
+
+        # 1. Hard Constraints: Time, Fatigue, and Volume
         if session.total_time > request.session_time_limit:
             violations += 1
         if session.total_fatigue > request.daily_fatigue_cap:
@@ -91,20 +26,33 @@ def count_constraint_violations(plan: WeeklyPlan, request: PlanningRequest) -> i
         if len(session.exercise_ids) > request.max_exercises_per_session:
             violations += 1
 
-    return violations
+        # 2. Bio-Constraint: Heavy Lifts per Session
+        # We define "Heavy" as any exercise requiring 2+ days of recovery
+        heavy_count = sum(1 for ex_id in session.exercise_ids 
+                         if exercise_lookup[ex_id].min_recovery_days >= 2)
+        if heavy_count > request.max_heavy_exercises_per_session:
+            violations += 1
 
+        # 3. Bio-Constraint: Recovery Windows
+        for ex_id in session.exercise_ids:
+            if ex_id in exercise_last_seen:
+                days_since = day_idx - exercise_last_seen[ex_id]
+                required = exercise_lookup[ex_id].min_recovery_days
+                if days_since < required:
+                    violations += 1
+            exercise_last_seen[ex_id] = day_idx
+
+    return violations
 
 def evaluate_weekly_plan(
     plan: WeeklyPlan,
     request: PlanningRequest,
     exercise_lookup: dict[str, Exercise],
 ) -> dict:
-    coverage_score = compute_coverage_score(plan, request, exercise_lookup)
-    priority_score = compute_priority_score(plan, exercise_lookup)
-    time_utilization_score = compute_time_utilization_score(plan, request)
-    fatigue_balance_score = compute_fatigue_balance_score(plan)
-    training_frequency_score = compute_training_frequency_score(plan, request)
-    constraint_violations = count_constraint_violations(plan, request)
+    # ... (Scores remain the same) ...
+    
+    # Update this call to pass exercise_lookup
+    constraint_violations = count_constraint_violations(plan, request, exercise_lookup)
 
     total_score = (
         coverage_score * 25
@@ -112,7 +60,7 @@ def evaluate_weekly_plan(
         + time_utilization_score * 15
         + fatigue_balance_score * 15
         + training_frequency_score * 15
-        - constraint_violations * 10
+        - constraint_violations * 20  # Increased penalty for violating bio-constraints
     )
 
     return {

@@ -124,28 +124,27 @@ def build_greedy_plan(exercises, request):
                 training_days_used=active_days,
             )
 
+            # ... (inside the while making_progress loop) ...
+
+            # 1. NEW HEAVY CHECK: Use min_recovery_days instead of just fatigue_cost
             current_heavy = sum(
-                1
-                for ex_id in session.exercise_ids
-                if exercise_lookup[ex_id].fatigue_cost >= 6
+                1 for ex_id in session.exercise_ids
+                if exercise_lookup[ex_id].min_recovery_days >= 2
             )
 
-            if (
-                best.fatigue_cost >= 6
-                and current_heavy >= request.max_heavy_exercises_per_session
-            ):
+            # 2. EVALUATE BEST CANDIDATE
+            best = ranked[0]
+            
+            # 3. APPLY HEAVY LIMIT: Check if the new candidate is also 'heavy'
+            is_candidate_heavy = best.min_recovery_days >= 2
+            
+            if (is_candidate_heavy and 
+                current_heavy >= request.max_heavy_exercises_per_session):
                 continue
 
-            if len(session.exercise_ids) == 0:
-                if best_score < request.min_start_score:
-                    continue
-            else:
-                if best_score < request.min_continue_score:
-                    continue
-
-            # Add the best exercise to this day
+            # 4. ADD TO SESSION: Use the new duration_min field name
             session.exercise_ids.append(best.id)
-            session.total_time += best.duration_min
+            session.total_time += best.duration_min # Changed from estimated_time
             session.total_fatigue += best.fatigue_cost
 
             if best.category not in session.categories_hit:

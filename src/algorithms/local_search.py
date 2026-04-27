@@ -194,6 +194,8 @@ def refine_plan_with_replacements(
         tuple[WeeklyPlan, dict]: A tuple containing the fully optimized WeeklyPlan
         and a dictionary of its final evaluated metrics.
     """
+    print(f"\n[DEBUG] The algorithm is actually running with max_iterations = {max_iterations}\n")
+    
     best_plan = deepcopy(plan)
     best_metrics = evaluate_weekly_plan(best_plan, request, exercise_lookup)
 

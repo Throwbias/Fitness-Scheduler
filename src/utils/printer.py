@@ -43,3 +43,18 @@ def print_schedule(plan, exercise_lookup):
             )
 
     print("\n" + "=" * 50 + "\n")
+
+def print_schedule_metrics(metrics: dict):
+    """
+    Prints a formatted summary of the evaluation metrics.
+    """
+    print("\n" + "="*40)
+    print("🏆 FINAL SCHEDULE METRICS")
+    print("="*40)
+    print(f"Total Score:           {metrics.get('total_score', 0):.2f}")
+    print(f"Fatigue Balance (Var): {metrics.get('fatigue_variance', 0):.2f} (Lower is better)")
+    print(f"Coverage Score:        {metrics.get('coverage_score', 0):.2f}")
+    print(f"Priority Score:        {metrics.get('priority_score', 0):.2f}")
+    print(f"Time Utilization:      {metrics.get('time_utilization', 0):.2f}")
+    print(f"Constraint Violations: {metrics.get('constraint_violations', 0)}")
+    print("="*40 + "\n")

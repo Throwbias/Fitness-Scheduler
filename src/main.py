@@ -6,8 +6,10 @@ from src.algorithms.local_search import refine_plan_with_replacements
 from src.algorithms.random_scheduler import build_random_plan
 from src.utils.evaluator import evaluate_weekly_plan
 from src.utils.experiment_runner import save_results
-from src.utils.loader import load_exercises, load_request
-from src.utils.printer import print_schedule
+from src.utils.loader import load_exercises, load_request, Exercise
+from src.utils.printer import print_schedule, print_schedule_metrics
+from src.db_connector import fetch_all_exercises
+
 
 # Configure the logger
 logging.basicConfig(
@@ -43,7 +45,29 @@ def main():
     logging.info(f"Using dataset: {args.dataset}")
     logging.info(f"Using request config: {args.request}")
 
-    exercises = load_exercises(args.dataset)
+    # --- SQL DATA PIPELINE ---
+    logging.info("Connecting to SQL Server to fetch exercise library...")
+    raw_exercises = fetch_all_exercises()
+    
+    if not raw_exercises:
+        logging.error("No exercises found! Check your database connection.")
+        return
+        
+    exercises = []
+    for ex_data in raw_exercises:
+        exercises.append(
+            Exercise(
+                id=ex_data['ExerciseID'],
+                name=ex_data['Name'],
+                category=ex_data['CategoryName'],
+                is_heavy_compound=bool(ex_data['IsHeavyCompound']),
+                priority_score=ex_data['PriorityScore'],
+                fatigue_cost=ex_data['FatigueCost'],
+                estimated_time=ex_data['EstimatedTimeMins']
+            )
+        )
+    
+    logging.info(f"Successfully loaded {len(exercises)} exercises into the engine.")
     exercise_lookup = {ex.id: ex for ex in exercises}
     request = load_request(args.request)
 
@@ -73,6 +97,8 @@ def main():
     logging.info(
         f"Refined plan optimized with score: {refined_metrics['total_score']:.3f}"
     )
+    #Delegate the printing to printer.py
+    print_schedule_metrics(refined_metrics)
 
     # Save Results
     logging.info("Saving experiment results to CSV...")

@@ -15,26 +15,29 @@ def fits_time(
     return session.total_time + exercise.duration_min <= request.session_time_limit
 
 
-def fits_fatigue(
-    exercise: Exercise, session: SessionPlan, request: PlanningRequest
-) -> bool:
-    return session.total_fatigue + exercise.fatigue_cost <= request.daily_fatigue_cap
+def fits_time(exercise: Exercise, session: SessionPlan, request: PlanningRequest) -> bool:
+    return (session.total_time + exercise.duration_min) <= request.session_time_limit
 
-
-def fits_exercise_count(session: SessionPlan, request: PlanningRequest) -> bool:
-    return len(session.exercise_ids) < request.max_exercises_per_session
-
+def fits_fatigue(exercise: Exercise, session: SessionPlan, request: PlanningRequest) -> bool:
+    return (session.total_fatigue + exercise.fatigue_cost) <= request.daily_fatigue_cap
 
 def has_recovery_conflict(
-    exercise: Exercise,
-    current_day_index: int,
-    last_day_by_category: dict[str, int],
+    exercise: Exercise, 
+    current_day_index: int, 
+    last_day_by_category: dict[str, int]
 ) -> bool:
+    """
+    Checks if the specific biomechanical category of this exercise 
+    was performed too recently based on its unique recovery needs.
+    """
     if exercise.category not in last_day_by_category:
         return False
 
-    gap = current_day_index - last_day_by_category[exercise.category]
-    return gap < exercise.min_recovery_days
+    last_day = last_day_by_category[exercise.category]
+    days_since = current_day_index - last_day
+
+    # Use the dynamic recovery integer from the SQL database
+    return days_since < exercise.min_recovery_days
 
 
 def is_feasible(
