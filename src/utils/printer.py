@@ -1,60 +1,64 @@
-def print_schedule(plan, exercise_lookup):
+from src.data_structures.models import WeeklyPlan, Exercise
+
+def print_schedule(plan: WeeklyPlan, exercise_lookup: dict[str, Exercise], title: str = "TRAINING PLAN"):
     """
-    Prints the weekly workout plan in chronological order.
-    Correctly matches the attributes in src/data_structures/models.py.
+    Prints a day-by-day breakdown of a specific generated workout plan, 
+    now including the movement category for each exercise.
     """
-    print("\n" + "=" * 50)
-    print("🏋️  FINAL OPTIMIZED WEEKLY SCHEDULE  🏋️")
-    print("=" * 50)
+    print("\n" + "="*70)
+    print(f"📋 {title.upper()}")
+    print("="*70)
 
-    # Define the chronological order for the week
-    chrono_order = [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-    ]
-
-    # Sort the dictionary items based on their position in the chrono_order list
-    sorted_sessions = sorted(
-        plan.sessions.items(),
-        key=lambda x: chrono_order.index(x[0]) if x[0] in chrono_order else 99,
-    )
-
-    for day, session in sorted_sessions:
-        print(f"\n📅 Day {day}:")
-
-        if not session.exercise_ids:
-            print("   [Rest Day]")
+    day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    
+    for day in day_order:
+        session = plan.sessions.get(day)
+        if not session or not session.exercise_ids:
             continue
 
-        print(
-            f"   ⏱️ Total Time: {session.total_time} mins | 🔋 Total Fatigue: {session.total_fatigue}"
-        )
-        print("   Exercises:")
+        print(f"\n>> {day.upper()} ({session.total_time} min | {session.total_fatigue} Fatigue)")
+        print("-" * 55)
+        
+        for ex_id in session.exercise_ids:
+            ex = exercise_lookup.get(ex_id)
+            if ex:
+                # Column 1: Exercise Name | Column 2: Category | Column 3: Duration
+                print(f"  [ ] {ex.name.ljust(25)} | {ex.category.ljust(18)} | {ex.duration_min} min")
+            else:
+                print(f"  [ ] Unknown ({ex_id})")
 
-        for i, ex_id in enumerate(session.exercise_ids, 1):
-            ex = exercise_lookup[ex_id]
-            print(
-                f"     {i}. {ex.name} ({ex.category}) - {ex.duration_min}m / {ex.fatigue_cost}f"
-            )
-
-    print("\n" + "=" * 50 + "\n")
-
-def print_schedule_metrics(metrics: dict):
+def print_metrics_comparison(all_metrics: dict[str, dict]):
     """
-    Prints a formatted summary of the evaluation metrics.
+    Prints a side-by-side comparison table of all algorithm metrics.
     """
-    print("\n" + "="*40)
-    print("🏆 FINAL SCHEDULE METRICS")
-    print("="*40)
-    print(f"Total Score:           {metrics.get('total_score', 0):.2f}")
-    print(f"Fatigue Balance (Var): {metrics.get('fatigue_variance', 0):.2f} (Lower is better)")
-    print(f"Coverage Score:        {metrics.get('coverage_score', 0):.2f}")
-    print(f"Priority Score:        {metrics.get('priority_score', 0):.2f}")
-    print(f"Time Utilization:      {metrics.get('time_utilization', 0):.2f}")
-    print(f"Constraint Violations: {metrics.get('constraint_violations', 0)}")
-    print("="*40 + "\n")
+    headers = ["Metric", "Greedy", "Random", "Refined"]
+    metrics_to_show = [
+        ("Total Score", "total_score", "{:.2f}"),
+        ("Fatigue Balance", "fatigue_balance_score", "{:.2f}"),
+        ("Coverage", "coverage_score", "{:.2f}"),
+        ("Priority Score", "priority_score", "{:.2f}"),
+        ("Time Util.", "time_utilization_score", "{:.2f}"),
+        ("Violations", "constraint_violations", "{:d}"),
+        ("Runtime (s)", "runtime", "{:.4f}")
+    ]
+
+    print("\n" + "="*65)
+    print("📊 ALGORITHM PERFORMANCE COMPARISON")
+    print("="*65)
+    
+    header_row = f"{headers[0]:<18} | {headers[1]:>12} | {headers[2]:>12} | {headers[3]:>12}"
+    print(header_row)
+    print("-" * len(header_row))
+
+    for label, key, fmt in metrics_to_show:
+        greedy_val = all_metrics.get("Greedy", {}).get(key, 0)
+        random_val = all_metrics.get("Random", {}).get(key, 0)
+        refined_val = all_metrics.get("Refined", {}).get(key, 0)
+        
+        row = (f"{label:<18} | "
+               f"{fmt.format(greedy_val):>12} | "
+               f"{fmt.format(random_val):>12} | "
+               f"{fmt.format(refined_val):>12}")
+        print(row)
+    
+    print("="*65 + "\n")

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
-from typing import Dict, List
-
+from typing import List, Dict, Optional
+import random
 
 @dataclass
 class Exercise:
@@ -13,43 +13,24 @@ class Exercise:
     fatigue_cost: int
     priority: int
     min_recovery_days: int
-    equipment: List[str] = field(default_factory=list)
-    goal_tags: List[str] = field(default_factory=list)
-    contraindications: List[str] = field(default_factory=list)
-
+    goal_tags: List[str]
 
 @dataclass
 class PlanningRequest:
-    days_available: List[str]
+    days_available: List[int]  # Now indices 0-6 (e.g., [0, 2, 4])
     session_time_limit: int
     goal: str
     required_categories: List[str]
     daily_fatigue_cap: int
-    equipment_available: List[str] = field(default_factory=list)
-    excluded_exercises: List[str] = field(default_factory=list)
-    preferred_exercises: List[str] = field(default_factory=list)
-    max_exercises_per_session: int = 4
-    max_training_days_per_week: int = 5
-    desired_training_days_per_week: int = 5
-    min_start_score: float = 11.0
-    min_continue_score: float = 5.5
-    max_heavy_exercises_per_session: int = 2
-    min_exercises_per_session: int = 2
-    min_session_time_for_training_day: int = 15
-    session_fullness_preference: str = "moderate"
-
+    max_exercises_per_session: int
+    desired_training_days_per_week: int # Used to guide the GA
 
 @dataclass
-class SessionPlan:
-    day: str
-    exercise_ids: List[str] = field(default_factory=list)
-    total_time: int = 0
-    total_fatigue: int = 0
-    categories_hit: List[str] = field(default_factory=list)
+class Individual:
+    # The Chromosome: A list of 7 lists, each containing Exercise objects
+    chromosome: List[List[Exercise]] = field(default_factory=lambda: [[] for _ in range(7)])
+    fitness_score: float = 0.0
+    metrics: Dict[str, float] = field(default_factory=dict)
 
-
-@dataclass
-class WeeklyPlan:
-    sessions: Dict[str, SessionPlan]
-    total_score: float = 0.0
-    constraint_violations: int = 0
+    def get_active_days(self) -> List[int]:
+        return [i for i, day in enumerate(self.chromosome) if len(day) > 0]

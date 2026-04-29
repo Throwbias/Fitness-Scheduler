@@ -1,19 +1,16 @@
 {
   "days_available": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-  "session_time_limit": 60,
-  "goal": "strength",
-  "required_categories": ["squat", "hinge", "push", "pull", "core"],
-  "daily_fatigue_cap": 20,
-  "equipment_available": ["barbell", "rack", "bench", "dumbbell", "pullup_bar", "machine", "trap_bar", "kettlebell", "ab_wheel", "cable"],
+  "session_time_limit": 90,
+  "goal": "Hypertrophy",
+  "required_categories": ["Horizontal Push", "Vertical Push", "Horizontal Pull", "Vertical Pull", "Knee Dominant", "Hip Dominant"],
+  "daily_fatigue_cap": 120,
+  "equipment_available": ["Barbell", "Dumbbell", "Machine", "Cable", "Pullup Bar", "Bench", "Rack", "Trap Bar", "Kettlebell", "Ab Wheel", "Bodyweight"],
   "excluded_exercises": [],
   "preferred_exercises": [],
-  "max_exercises_per_session": 4,
+  "max_exercises_per_session": 6,
   "max_training_days_per_week": 6,
-  "desired_training_days_per_week": 5,
-  "min_start_score": 7.0,
-  "min_continue_score": 2.0,
+  "desired_training_days_per_week": 4,
   "max_heavy_exercises_per_session": 2,
-  "min_exercises_per_session": 2,
-  "min_session_time_for_training_day": 10,
-  "session_fullness_preference": "moderate"
+  "min_exercises_per_session": 1,
+  "min_session_time_for_training_day": 5
 }

@@ -1,32 +1,44 @@
 import csv
 import os
+from datetime import datetime
 
-
-def save_results(
-    metrics_list: list[dict], output_dir: str = "results", filename: str = "summary.csv"
-):
+def save_results(results_with_names: list[tuple[str, dict]], filename: str = "results/raw/experiment_results.csv"):
     """
-    Saves the experimental metrics to a CSV file for analysis.
-
+    Saves the metrics from multiple algorithm runs into a CSV file.
+    
     Args:
-        metrics_list (list[dict]): A list of dictionaries containing the scoring metrics.
-        output_dir (str): The folder to save the results in.
-        filename (str): The name of the output CSV file.
+        results_with_names: A list of (algorithm_name, metrics_dict) tuples.
+        filename: Path to the output CSV.
     """
-    # Ensure the results directory exists
-    os.makedirs(output_dir, exist_ok=True)
+    # 1. Ensure the directory exists
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-    filepath = os.path.join(output_dir, filename)
+    # 2. Flatten the data for the CSV
+    # We combine the algorithm name and the metrics into one flat dictionary
+    flattened_data = []
+    for algo_name, metrics in results_with_names:
+        row = {"algorithm": algo_name, "timestamp": datetime.now().isoformat()}
+        row.update(metrics)
+        flattened_data.append(row)
 
-    # If the list is empty, do nothing
-    if not metrics_list:
+    if not flattened_data:
         return
 
-    # Extract the column headers dynamically from the first dictionary's keys
-    headers = metrics_list[0].keys()
+    # 3. Determine headers from the first row
+    headers = flattened_data[0].keys()
 
-    # Write the data to a CSV
-    with open(filepath, "w", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(file, fieldnames=headers)
-        writer.writeheader()
-        writer.writerows(metrics_list)
+    # 4. Write to CSV
+    # 'a' (append) mode is used so you can run the script multiple times 
+    # and compare different sessions in one file.
+    file_exists = os.path.isfile(filename)
+    
+    with open(filename, mode='a', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
+        
+        # Only write header if the file is new
+        if not file_exists:
+            writer.writeheader()
+            
+        writer.writerows(flattened_data)
+
+    print(f"[SUCCESS] Results successfully appended to {filename}")

@@ -4,8 +4,6 @@ def get_db_connection():
     """
     Establishes a connection to the local SQL Server database.
     """
-    # NOTE: You will need to change 'YOUR_SERVER_NAME' to what shows up 
-    # at the very top of your Object Explorer in SSMS (e.g., 'localhost\SQLEXPRESS' or just '.')
     server = r'DESKTOP-VRDBDDU\SQLEXPRESS'
     database = 'FitnessScheduler'
 
@@ -22,7 +20,7 @@ def get_db_connection():
 
 def fetch_all_exercises():
     """
-    Pulls the exercises from SQYOURL and formats them as a list of dictionaries.
+    Pulls the exercises from SQL and formats them as a list of dictionaries.
     """
     conn = get_db_connection()
     if not conn:
@@ -30,16 +28,19 @@ def fetch_all_exercises():
 
     cursor = conn.cursor()
     
-    # We use a JOIN to grab the actual Category Name instead of just the ID
+    # Expanded query to include MuscleGroup, Difficulty, and MinRecoveryDays
     query = """
         SELECT 
             e.ExerciseID, 
             e.Name, 
             c.CategoryName, 
-            e.IsHeavyCompound, 
-            e.PriorityScore, 
+            e.MuscleGroup,
+            e.Difficulty,
+            e.EstimatedTimeMins,
             e.FatigueCost, 
-            e.EstimatedTimeMins
+            e.PriorityScore,
+            e.MinRecoveryDays,
+            e.GoalTags
         FROM Exercises e
         JOIN MovementCategories c ON e.CategoryID = c.CategoryID;
     """
@@ -49,17 +50,8 @@ def fetch_all_exercises():
     
     exercises = []
     for row in cursor.fetchall():
-        # Zip combines the column names with the row values into a dictionary
         exercise_dict = dict(zip(columns, row))
         exercises.append(exercise_dict)
 
     conn.close()
     return exercises
-
-# --- Quick Test ---
-if __name__ == "__main__":
-    ex_list = fetch_all_exercises()
-    print(f"Loaded {len(ex_list)} exercises from the database.")
-    if ex_list:
-        print("First exercise looks like this:")
-        print(ex_list[0])

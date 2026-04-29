@@ -1,25 +1,27 @@
 from src.data_structures.models import Exercise, PlanningRequest, SessionPlan
 
-
 def equipment_is_available(exercise: Exercise, request: PlanningRequest) -> bool:
+    """Checks if the user has all equipment required for the exercise."""
     return all(eq in request.equipment_available for eq in exercise.equipment)
 
-
 def is_excluded(exercise: Exercise, request: PlanningRequest) -> bool:
+    """Checks if the exercise is on the user's exclusion list."""
     return exercise.name in request.excluded_exercises
 
-
-def fits_time(
-    exercise: Exercise, session: SessionPlan, request: PlanningRequest
-) -> bool:
-    return session.total_time + exercise.duration_min <= request.session_time_limit
-
-
 def fits_time(exercise: Exercise, session: SessionPlan, request: PlanningRequest) -> bool:
+    """Checks if adding this exercise exceeds the session time limit."""
     return (session.total_time + exercise.duration_min) <= request.session_time_limit
 
 def fits_fatigue(exercise: Exercise, session: SessionPlan, request: PlanningRequest) -> bool:
+    """Checks if adding this exercise exceeds the daily fatigue capacity."""
     return (session.total_fatigue + exercise.fatigue_cost) <= request.daily_fatigue_cap
+
+def fits_exercise_count(session: SessionPlan, request: PlanningRequest) -> bool:
+    """
+    FIX: Checks if the session has room for more exercises.
+    Returns True if current count is less than the allowed maximum.
+    """
+    return len(session.exercise_ids) < request.max_exercises_per_session
 
 def has_recovery_conflict(
     exercise: Exercise, 
@@ -36,9 +38,7 @@ def has_recovery_conflict(
     last_day = last_day_by_category[exercise.category]
     days_since = current_day_index - last_day
 
-    # Use the dynamic recovery integer from the SQL database
     return days_since < exercise.min_recovery_days
-
 
 def is_feasible(
     exercise: Exercise,
@@ -48,6 +48,10 @@ def is_feasible(
     current_day_index: int,
     last_day_by_category: dict[str, int],
 ) -> bool:
+    """
+    Determines if a candidate exercise can be added to a session 
+    without violating any hard constraints.
+    """
     if exercise.id in assigned_ids:
         return False
     if is_excluded(exercise, request):
@@ -58,6 +62,7 @@ def is_feasible(
         return False
     if not fits_fatigue(exercise, session, request):
         return False
+    # Correctly calls the newly implemented function
     if not fits_exercise_count(session, request):
         return False
     if has_recovery_conflict(exercise, current_day_index, last_day_by_category):
