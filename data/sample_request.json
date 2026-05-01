@@ -1,16 +1,19 @@
 {
-  "days_available": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-  "session_time_limit": 90,
+  "days_available": [0,2,4],
+  "session_time_limit": 60,
   "goal": "Hypertrophy",
-  "required_categories": ["Horizontal Push", "Vertical Push", "Horizontal Pull", "Vertical Pull", "Knee Dominant", "Hip Dominant"],
-  "daily_fatigue_cap": 120,
-  "equipment_available": ["Barbell", "Dumbbell", "Machine", "Cable", "Pullup Bar", "Bench", "Rack", "Trap Bar", "Kettlebell", "Ab Wheel", "Bodyweight"],
-  "excluded_exercises": [],
-  "preferred_exercises": [],
+  "required_categories": [
+    "Horizontal Push", 
+    "Vertical Push", 
+    "Horizontal Pull", 
+    "Vertical Pull", 
+    "Hip Dominant",
+    "Knee Extension",
+    "Knee Flexion",
+    "Spinal Flexion",
+    "Spinal Rotation"
+  ],
+  "daily_fatigue_cap": 80,
   "max_exercises_per_session": 6,
-  "max_training_days_per_week": 6,
-  "desired_training_days_per_week": 4,
-  "max_heavy_exercises_per_session": 2,
-  "min_exercises_per_session": 1,
-  "min_session_time_for_training_day": 5
+  "desired_training_days_per_week": 3
 }

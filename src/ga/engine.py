@@ -34,8 +34,9 @@ class GeneticSolver:
         """
         The main evolutionary loop.
         """
-        # 1. Initialization (We wrote the logic for this earlier)
+        # 1. Initialization 
         self._initialize_population()
+        self.history = [] #List to track the best score per generation
         
         for gen in range(self.generations):
             # 2. Evaluation: Score every member of the current population
@@ -45,6 +46,9 @@ class GeneticSolver:
             # Sort population by fitness (Best first)
             self.population.sort(key=lambda x: x.fitness_score, reverse=True)
             
+            #Record the best score of this generation
+            self.history.append(self.population[0].fitness_score)
+
             # Print Progress (Optional)
             if gen % 10 == 0:
                 print(f"Gen {gen} | Best Score: {self.population[0].fitness_score:.2f}")

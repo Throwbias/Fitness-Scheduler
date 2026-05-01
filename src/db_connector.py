@@ -7,20 +7,19 @@ def get_db_connection():
     server = r'DESKTOP-VRDBDDU\SQLEXPRESS'
     database = 'FitnessScheduler'
 
-    # Using Windows Authentication (Trusted_Connection=yes)
+    # Windows Authentication remains the standard
     conn_string = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};Trusted_Connection=yes;'
     
     try:
         conn = pyodbc.connect(conn_string)
-        print("[SUCCESS] Connected to SQL Server!")
         return conn
     except Exception as e:
-        print(f"[ERROR] Could not connect to database: {e}")
+        print(f"[ERROR] Database connection failed: {e}")
         return None
 
 def fetch_all_exercises():
     """
-    Pulls the exercises from SQL and formats them as a list of dictionaries.
+    Pulls the full exercise library for the GA pool.
     """
     conn = get_db_connection()
     if not conn:
@@ -28,7 +27,7 @@ def fetch_all_exercises():
 
     cursor = conn.cursor()
     
-    # Expanded query to include MuscleGroup, Difficulty, and MinRecoveryDays
+    # We fetch all metadata required for the Spacing and Recovery logic
     query = """
         SELECT 
             e.ExerciseID, 
@@ -50,8 +49,7 @@ def fetch_all_exercises():
     
     exercises = []
     for row in cursor.fetchall():
-        exercise_dict = dict(zip(columns, row))
-        exercises.append(exercise_dict)
+        exercises.append(dict(zip(columns, row)))
 
     conn.close()
     return exercises

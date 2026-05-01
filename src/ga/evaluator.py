@@ -46,17 +46,23 @@ class GAEvaluator:
         
         coverage_points = 0
         req_categories = set(request.required_categories)
+        
         for cat in req_categories:
-            count = category_counts.get(cat, 0)
-            if count == 1:
-                coverage_points += 1.0
-            elif count > 1:
-                coverage_points += 1.4 # Extra credit for variety
+            if category_counts.get(cat, 0) >= 1:
+                # 1 point for hitting the required category. No extra credit for spamming it.
+                coverage_points += 1.0 
 
         max_possible_coverage = len(req_categories)
-        coverage_ratio = min(1.0, coverage_points / max_possible_coverage) if max_possible_coverage > 0 else 1.0
+        
+        # Calculate the base ratio
+        coverage_ratio = (coverage_points / max_possible_coverage) if max_possible_coverage > 0 else 1.0
         final_coverage_pts = coverage_ratio * 50
 
+        # NEW: The "Missing Muscle" Penalty
+        missing_categories = max_possible_coverage - coverage_points
+        if missing_categories > 0:
+            # Deduct 15 points from the TOTAL score for every category it failed to include
+            final_coverage_pts -= (missing_categories * 15)
 
         # 4. SPACING & RECOVERY (Penalty-Based)
         # ---------------------------------------------------------
@@ -91,14 +97,37 @@ class GAEvaluator:
         # 5. HARD CONSTRAINT VIOLATIONS (The Death Penalty)
         # ---------------------------------------------------------
         violation_penalty = 0
+        
+        # --- UPDATED: Training Frequency Check (The Breadcrumb Fix) ---
+        active_days = individual.get_active_days()
+        day_difference = len(active_days) - request.desired_training_days_per_week
+        
+        if day_difference > 0:
+            # SCALING PENALTY: 50 points for EVERY extra day. 
+            # 6 extra days = 300 penalty. 1 extra day = 50 penalty.
+            violation_penalty += (day_difference * 50) 
+            
+        elif day_difference < 0:
+             # Penalty for scheduling too few days
+            violation_penalty += (abs(day_difference) * 50)
+
+        # Existing Time and Fatigue checks below...
         for d in target_day_indices:
-            day_time = sum(ex.duration_min for ex in individual.chromosome[d])
-            day_fatigue = sum(ex.fatigue_cost for ex in individual.chromosome[d])
+            session = individual.chromosome[d]
+            day_time = sum(ex.duration_min for ex in session)
+            day_fatigue = sum(ex.fatigue_cost for ex in session)
             
             if day_time > request.session_time_limit:
                 violation_penalty += 100
             if day_fatigue > request.daily_fatigue_cap:
                 violation_penalty += 100
+
+            # Same-Day Duplicate Check (that we added previously)
+            seen_exercises = set()
+            for ex in session:
+                if ex.name in seen_exercises:
+                    violation_penalty += 100 
+                seen_exercises.add(ex.name)
 
 
         # FINAL SCORE SUMMATION

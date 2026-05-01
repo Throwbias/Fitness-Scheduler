@@ -1,64 +1,65 @@
-from src.data_structures.models import WeeklyPlan, Exercise
+import logging
+from typing import Dict, List
+from src.data_structures.models import Individual, PlanningRequest
 
-def print_schedule(plan: WeeklyPlan, exercise_lookup: dict[str, Exercise], title: str = "TRAINING PLAN"):
+def print_ga_schedule(individual: Individual, request: PlanningRequest):
     """
-    Prints a day-by-day breakdown of a specific generated workout plan, 
-    now including the movement category for each exercise.
+    Prints the evolved 7-day workout plan in a clean, professional format.
+    Maps day indices (0-6) to their names and calculates session totals.
     """
-    print("\n" + "="*70)
-    print(f"📋 {title.upper()}")
-    print("="*70)
-
-    day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
     
-    for day in day_order:
-        session = plan.sessions.get(day)
-        if not session or not session.exercise_ids:
+    print("\n" + "="*60)
+    print(f"{'FINAL EVOLVED WORKOUT PLAN':^60}")
+    print(f"{f'Fitness Score: {individual.fitness_score:.2f}':^60}")
+    print("="*60)
+
+    for i, day_name in enumerate(DAYS):
+        session = individual.chromosome[i]
+        
+        # Determine if this was a requested training day
+        is_training_day = i in request.days_available
+        
+        if not is_training_day:
+            # Skip printing days that weren't requested as training days
             continue
-
-        print(f"\n>> {day.upper()} ({session.total_time} min | {session.total_fatigue} Fatigue)")
-        print("-" * 55)
+            
+        print(f"\n[ {day_name} ]")
         
-        for ex_id in session.exercise_ids:
-            ex = exercise_lookup.get(ex_id)
-            if ex:
-                # Column 1: Exercise Name | Column 2: Category | Column 3: Duration
-                print(f"  [ ] {ex.name.ljust(25)} | {ex.category.ljust(18)} | {ex.duration_min} min")
+        if not session:
+            print("  (No exercises scheduled for this available slot)")
+            continue
+            
+        total_time = sum(ex.duration_min for ex in session)
+        total_fatigue = sum(ex.fatigue_cost for ex in session)
+        
+        # Header for the exercise list
+        print(f"  {'Exercise':<22} | {'Time':<7} | {'Category':<18}")
+        print(f"  {'-'*22}-|-{'-'*7}-|-{'-'*18}")
+        
+        for ex in session:
+            print(f"  {ex.name[:22]:<22} | {ex.duration_min:<3} min | {ex.category:<18}")
+            
+        print(f"  {'-'*55}")
+        print(f"  >> Session Totals: {total_time} / {request.session_time_limit} min | "
+              f"Fatigue: {total_fatigue} / {request.daily_fatigue_cap}")
+
+    print("\n" + "="*60)
+    print(f"{'End of Schedule':^60}")
+    print("="*60 + "\n")
+
+def print_metrics_comparison(comparison_data: Dict[str, Dict]):
+    """
+    Optional: Keeps compatibility if you want to compare different GA runs later.
+    """
+    print("\n" + "="*40)
+    print(f"{'ALGORITHM PERFORMANCE COMPARISON':^40}")
+    print("="*40)
+    for algo, metrics in comparison_data.items():
+        print(f"\n[{algo}]")
+        for metric, value in metrics.items():
+            if isinstance(value, float):
+                print(f"  {metric:<20}: {value:>8.2f}")
             else:
-                print(f"  [ ] Unknown ({ex_id})")
-
-def print_metrics_comparison(all_metrics: dict[str, dict]):
-    """
-    Prints a side-by-side comparison table of all algorithm metrics.
-    """
-    headers = ["Metric", "Greedy", "Random", "Refined"]
-    metrics_to_show = [
-        ("Total Score", "total_score", "{:.2f}"),
-        ("Fatigue Balance", "fatigue_balance_score", "{:.2f}"),
-        ("Coverage", "coverage_score", "{:.2f}"),
-        ("Priority Score", "priority_score", "{:.2f}"),
-        ("Time Util.", "time_utilization_score", "{:.2f}"),
-        ("Violations", "constraint_violations", "{:d}"),
-        ("Runtime (s)", "runtime", "{:.4f}")
-    ]
-
-    print("\n" + "="*65)
-    print("📊 ALGORITHM PERFORMANCE COMPARISON")
-    print("="*65)
-    
-    header_row = f"{headers[0]:<18} | {headers[1]:>12} | {headers[2]:>12} | {headers[3]:>12}"
-    print(header_row)
-    print("-" * len(header_row))
-
-    for label, key, fmt in metrics_to_show:
-        greedy_val = all_metrics.get("Greedy", {}).get(key, 0)
-        random_val = all_metrics.get("Random", {}).get(key, 0)
-        refined_val = all_metrics.get("Refined", {}).get(key, 0)
-        
-        row = (f"{label:<18} | "
-               f"{fmt.format(greedy_val):>12} | "
-               f"{fmt.format(random_val):>12} | "
-               f"{fmt.format(refined_val):>12}")
-        print(row)
-    
-    print("="*65 + "\n")
+                print(f"  {metric:<20}: {value:>8}")
+    print("="*40 + "\n")
