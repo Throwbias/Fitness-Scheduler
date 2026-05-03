@@ -1,13 +1,13 @@
 {
-  "days_available": [0,1,2,3,4,5,6], 
-  "session_time_limit": 60,
+  "days_available": [0, 1, 2, 3, 4, 5, 6], 
+  "session_time_limit": 15,
   "goal": "Hypertrophy",
   "required_categories": [
     "Horizontal Push", "Vertical Push", "Horizontal Pull", 
     "Vertical Pull", "Hip Dominant", "Knee Extension", 
     "Knee Flexion", "Spinal Flexion", "Spinal Rotation"
   ],
-  "daily_fatigue_cap": 80,
-  "max_exercises_per_session": 6,
-  "desired_training_days_per_week": 4
+  "daily_fatigue_cap": 15,
+  "max_exercises_per_session": 2,
+  "desired_training_days_per_week": 6
 }

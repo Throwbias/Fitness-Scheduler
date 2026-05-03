@@ -1,55 +1,37 @@
 import json
 from pathlib import Path
-from typing import List
+from typing import List, Union
 import logging
-
 from src.data_structures.models import Exercise, PlanningRequest
 
-def load_exercises(path: str | Path) -> List[Exercise]:
+def load_request(path: Union[str, Path]) -> PlanningRequest:
     """
-    Loads raw exercise data from a JSON file.
-    Note: In production, we primarily use db_connector.py to fetch from SQL.
-    """
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            raw = json.load(f)
-        return [Exercise(**item) for item in raw]
-    except Exception as e:
-        logging.error(f"Failed to load exercises from {path}: {e}")
-        return []
-
-def load_request(path: str | Path) -> PlanningRequest:
-    """
-    Loads the user's planning constraints. 
-    Includes a filter to match JSON keys to the PlanningRequest dataclass.
+    Parses the user's JSON request file.
+    Includes a 'Cleaning Layer' to convert string-based day names 
+    (e.g., 'Monday') into the integer indices used by the GA chromosome.
     """
     try:
         with open(path, "r", encoding="utf-8") as f:
             raw = json.load(f)
         
-        # Mapping logic: Convert day names to integers if they exist as strings
         day_map = {
             "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
             "friday": 4, "saturday": 5, "sunday": 6
         }
         
         if "days_available" in raw:
-            processed_days = []
-            for day in raw["days_available"]:
-                if isinstance(day, str):
-                    processed_days.append(day_map[day.lower()])
-                else:
-                    processed_days.append(day)
-            raw["days_available"] = processed_days
+            raw["days_available"] = [
+                day_map[d.lower()] if isinstance(d, str) else d 
+                for d in raw["days_available"]
+            ]
 
-        # Robustness: Only pass keys that exist in the PlanningRequest dataclass
-        # This prevents 'TypeError: __init__() got an unexpected keyword argument'
+        # Use __annotations__ to dynamically filter for only valid PlanningRequest keys
         allowed_keys = PlanningRequest.__annotations__.keys()
         filtered_raw = {k: v for k, v in raw.items() if k in allowed_keys}
         
         return PlanningRequest(**filtered_raw)
         
     except Exception as e:
-        logging.error(f"Failed to load request from {path}: {e}")
-        # Return a safe default request if loading fails
+        logging.error(f"Critical error loading request: {e}")
+        # Fail-safe: Return a basic 3-day full-body request
         return PlanningRequest([0, 2, 4], 60, "General", [], 30, 5, 3)
